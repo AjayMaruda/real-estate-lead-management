@@ -5,11 +5,10 @@ export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectE
   return (
     <select
       className={cn(
-        "h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200",
+        "h-11 w-full rounded-2xl border border-slate-200/80 bg-white/90 px-4 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200/70",
         className,
       )}
       {...props}
     />
   );
 }
-

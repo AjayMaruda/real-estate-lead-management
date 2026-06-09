@@ -8,10 +8,10 @@ type Props = {
 export function LeadSearchBar({ value, onChange }: Props) {
   return (
     <Input
+      className="pl-10"
       value={value}
       onChange={(event) => onChange(event.target.value)}
       placeholder="Search by name, company, phone, or source"
     />
   );
 }
-

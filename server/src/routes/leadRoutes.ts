@@ -7,15 +7,15 @@ import { LEAD_SOURCES, LEAD_STATUSES } from "../types/lead";
 const leadSchema = z.object({
   name: z.string().min(2),
   phone: z.string().min(7),
-  email: z.string().email().optional().or(z.literal("")),
-  company: z.string().optional(),
+  email: z.preprocess((value) => (value === "" ? undefined : value), z.string().email().optional()),
+  company: z.preprocess((value) => (value === "" ? undefined : value), z.string().optional()),
   source: z.enum(LEAD_SOURCES),
   status: z.enum(LEAD_STATUSES),
-  budget: z.coerce.number().optional(),
-  notes: z.string().optional(),
-  assignedTo: z.string().optional(),
-  nextFollowUpAt: z.string().optional(),
-  lastContactedAt: z.string().optional(),
+  budget: z.preprocess((value) => (value === "" ? undefined : value), z.coerce.number().optional()),
+  notes: z.preprocess((value) => (value === "" ? undefined : value), z.string().optional()),
+  assignedTo: z.preprocess((value) => (value === "" ? undefined : value), z.string().optional()),
+  nextFollowUpAt: z.preprocess((value) => (value === "" ? undefined : value), z.string().optional()),
+  lastContactedAt: z.preprocess((value) => (value === "" ? undefined : value), z.string().optional()),
 });
 
 export const leadRoutes = Router();
