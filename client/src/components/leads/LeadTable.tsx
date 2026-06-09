@@ -1,6 +1,7 @@
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Select } from "../ui/select";
+import { Skeleton } from "../ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { FollowUpAlertBadge, PriorityScoreBadge } from "./LeadBadges";
 import type { Lead, LeadStatus } from "../../types/lead";
@@ -31,11 +32,29 @@ export function LeadTable({ leads, onEdit, onStatusChange, loading = false }: Pr
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="py-12 text-center text-slate-500">
-                    Syncing live leads from the backend...
-                  </TableCell>
-                </TableRow>
+                Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <Skeleton className="h-5 w-56" />
+                      <Skeleton className="mt-2 h-4 w-40" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-11 w-full" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-28" />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Skeleton className="ml-auto h-10 w-20" />
+                    </TableCell>
+                  </TableRow>
+                ))
               ) : leads.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="py-10 text-center text-slate-500">

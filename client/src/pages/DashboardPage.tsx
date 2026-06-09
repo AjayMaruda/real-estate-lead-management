@@ -2,6 +2,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, ArrowUpRight, Plus, RefreshCcw, Search, Sparkles } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Skeleton } from "../components/ui/skeleton";
 import type { Lead, LeadInput, LeadSource, LeadStatus, Metrics } from "../types/lead";
 import { addLead, loadLeads, loadMetrics, recalculateAllLeads, updateLead } from "../lib/api";
 import { computeMetrics } from "../lib/leadLogic";
@@ -30,6 +31,8 @@ export function DashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+
+  const isBusy = loading || refreshing;
 
   const query = useMemo(
     () => ({
@@ -158,7 +161,7 @@ export function DashboardPage() {
               <div className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3">
                 <div>
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Hot leads</p>
-                  <p className="mt-1 text-2xl font-semibold">{hotLeads}</p>
+                  {isBusy ? <Skeleton className="mt-2 h-8 w-12 bg-white/15" /> : <p className="mt-1 text-2xl font-semibold">{hotLeads}</p>}
                 </div>
                 <div className="rounded-2xl bg-amber-400/15 p-3 text-amber-300">
                   <AlertTriangle className="h-5 w-5" />
@@ -167,14 +170,21 @@ export function DashboardPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl bg-white/5 p-4">
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Follow-ups due</p>
-                  <p className="mt-2 text-2xl font-semibold">{followUpDue}</p>
+                  {isBusy ? <Skeleton className="mt-3 h-8 w-12 bg-white/15" /> : <p className="mt-2 text-2xl font-semibold">{followUpDue}</p>}
                 </div>
                 <div className="rounded-2xl bg-white/5 p-4">
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Latest sync</p>
-                  <p className="mt-2 text-sm font-medium">{lastSyncedAt ?? "Pending"}</p>
+                  {isBusy ? <Skeleton className="mt-3 h-5 w-24 bg-white/15" /> : <p className="mt-2 text-sm font-medium">{lastSyncedAt ?? "Pending"}</p>}
                 </div>
               </div>
-              {topLead ? (
+              {isBusy ? (
+                <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
+                  <Skeleton className="h-4 w-20 bg-white/15" />
+                  <Skeleton className="mt-3 h-6 w-40 bg-white/15" />
+                  <Skeleton className="mt-2 h-4 w-28 bg-white/15" />
+                  <Skeleton className="mt-4 h-8 w-24 bg-white/15" />
+                </div>
+              ) : topLead ? (
                 <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Top lead</p>
                   <p className="mt-2 text-lg font-semibold">{topLead.name}</p>
@@ -187,10 +197,10 @@ export function DashboardPage() {
         </div>
 
         <div className="space-y-6">
-          <KpiCards metrics={metrics} />
+          <KpiCards metrics={metrics} loading={isBusy} />
 
           <div className="grid gap-4 xl:grid-cols-[1.45fr_0.85fr]">
-            <Charts metrics={metrics} />
+            <Charts metrics={metrics} loading={isBusy} />
             <Card className="overflow-hidden">
               <CardHeader className="border-b border-slate-100 bg-gradient-to-br from-slate-50 to-white">
                 <CardTitle className="text-base">Product Feature</CardTitle>
@@ -222,58 +232,65 @@ export function DashboardPage() {
             </Card>
           </div>
 
-          <div className="space-y-4">
-            <div className="grid gap-3 lg:grid-cols-[1.15fr_0.85fr]">
+          <Card className="overflow-hidden border-white/70 bg-white/95">
+            <CardHeader className="border-b border-slate-100/80 bg-gradient-to-r from-white to-slate-50">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <CardTitle>Pipeline controls</CardTitle>
+                  <CardDescription className="mt-1">
+                    Search and filter the live pipeline without leaving the page.
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearch("");
+                    setFilters(defaultFilters);
+                  }}
+                >
+                  Clear All
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <LeadSearchBar value={search} onChange={setSearch} />
               </div>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSearch("");
-                  setFilters(defaultFilters);
-                }}
-              >
-                Clear All
-              </Button>
-            </div>
+              <LeadFilters
+                status={filters.status}
+                source={filters.source}
+                onStatusChange={(status) => setFilters((current) => ({ ...current, status }))}
+                onSourceChange={(source) => setFilters((current) => ({ ...current, source }))}
+                onReset={() => setFilters(defaultFilters)}
+              />
+            </CardContent>
+          </Card>
 
-            <LeadFilters
-              status={filters.status}
-              source={filters.source}
-              onStatusChange={(status) => setFilters((current) => ({ ...current, status }))}
-              onSourceChange={(source) => setFilters((current) => ({ ...current, source }))}
-              onReset={() => setFilters(defaultFilters)}
-            />
-
-            <Card className="overflow-hidden">
-              <CardHeader className="border-b border-slate-100 bg-white/90">
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <CardTitle>Leads</CardTitle>
-                    <CardDescription className="mt-1">
-                      {loading || refreshing
-                        ? "Syncing live data from the backend..."
-                        : `${leads.length} leads loaded from the API`}
-                    </CardDescription>
-                  </div>
-                  {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+          <Card className="overflow-hidden">
+            <CardHeader className="border-b border-slate-100 bg-white/90">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <CardTitle>Leads</CardTitle>
+                  <CardDescription className="mt-1">
+                    {isBusy ? "Syncing live data from the backend..." : `${leads.length} leads loaded from the API`}
+                  </CardDescription>
                 </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <LeadTable
-                  leads={leads}
-                  onEdit={(lead) => {
-                    setEditingLead(lead);
-                    setIsDialogOpen(true);
-                  }}
-                  onStatusChange={handleStatusChange}
-                  loading={loading || refreshing}
-                />
-              </CardContent>
-            </Card>
-          </div>
+                {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <LeadTable
+                leads={leads}
+                onEdit={(lead) => {
+                  setEditingLead(lead);
+                  setIsDialogOpen(true);
+                }}
+                onStatusChange={handleStatusChange}
+                loading={isBusy}
+              />
+            </CardContent>
+          </Card>
         </div>
       </div>
 
