@@ -3,7 +3,7 @@ import "dotenv/config";
 import { createServer } from "./app";
 import { LeadModel } from "./models/Lead";
 import { calculatePriorityScore, getFollowUpAlert } from "./utils/leadScoring";
-import { mockLeads } from "./data/mockLeads";
+import { buildSeedLeads } from "./seed/seedLeads";
 
 const port = Number(process.env.PORT ?? 4000);
 const mongoUri = process.env.MONGO_URI;
@@ -15,8 +15,9 @@ async function bootstrap() {
     await connect(mongoUri);
     const count = await LeadModel.countDocuments();
     if (count === 0) {
+      const seedLeads = buildSeedLeads();
       await LeadModel.insertMany(
-        mockLeads.map((lead) => ({
+        seedLeads.map((lead) => ({
           ...lead,
           priorityScore: calculatePriorityScore(lead),
           followUpAlert: getFollowUpAlert(lead),
@@ -31,4 +32,3 @@ async function bootstrap() {
 }
 
 void bootstrap();
-
